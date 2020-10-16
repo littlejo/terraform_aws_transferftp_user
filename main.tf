@@ -1,48 +1,59 @@
+data "aws_caller_identity" "current" {}
+
+locals {
+  account_id = data.aws_caller_identity.current.account_id
+  secrets = {
+    Password = "password"
+    Role = "arn:aws:iam::${local.account_id}:role/sftp_${var.user}_role"
+    HomeDirectory = "/${var.bucket_name}"
+    PublicKey = var.public_key
+  }
+  policy =   {
+               "Version": "2012-10-17",
+               "Statement": [
+                   {
+                       "Sid": "AllowListingOfUserFolder",
+                       "Action": [
+                           "s3:ListBucket",
+                           "s3:GetBucketLocation"
+                       ],
+                       "Effect": "Allow",
+                       "Resource": [
+                           "arn:aws:s3:::${var.bucket_name}"
+                       ]
+                   },
+                   {
+                       "Sid": "HomeDirObjectAccess",
+                       "Effect": "Allow",
+                       "Action": [
+                           "s3:PutObject",
+                           "s3:GetObject",
+                           "s3:DeleteObjectVersion",
+                           "s3:DeleteObject",
+                           "s3:GetObjectVersion"
+                       ],
+                       "Resource": "arn:aws:s3:::${var.bucket_name}/*"
+                   }
+               ]
+           }
+}
+
 resource "aws_secretsmanager_secret" "ftp_account" {
-  name = var.secret_name
+  name = "SFTP/${var.user}"
   description = "Storage sftp for ${var.bucket_name}"
 }
 
 resource "aws_secretsmanager_secret_version" "ftp_account" {
   secret_id     = aws_secretsmanager_secret.ftp_account.id
-  secret_string = jsonencode(var.secret)
+  secret_string = jsonencode(local.secrets)
 }
 
 resource "aws_iam_policy" "policy" {
-  name        = "S3_policy_for_example"
+  name        = "S3_policy_for_${var.user}"
   path        = "/"
   description = "Allow AWS Transfer to call AWS services on your behalf"
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AllowListingOfUserFolder",
-            "Action": [
-                "s3:ListBucket",
-                "s3:GetBucketLocation"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-                "arn:aws:s3:::example-bucket"
-            ]
-        },
-        {
-            "Sid": "HomeDirObjectAccess",
-            "Effect": "Allow",
-            "Action": [
-                "s3:PutObject",
-                "s3:GetObject",
-                "s3:DeleteObjectVersion",
-                "s3:DeleteObject",
-                "s3:GetObjectVersion"
-            ],
-            "Resource": "arn:aws:s3:::example-bucket/*"
-        }
-    ]
-}
-EOF
+  policy = jsonencode(local.policy)
 }
 
 resource "aws_iam_role" "sftp_variable_role" {

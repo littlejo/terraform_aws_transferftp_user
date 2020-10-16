@@ -1,19 +1,15 @@
-variable "secret" {
-  default = {
-    Password = "password"
-    Role = "arn:aws:iam::XXXXXXXXXX:role/sftp_example_role"
-    HomeDirectory = "/example-bucket"
-    PublicKey = "ssh-rsa- ..."
-  }
-  type = map(string)
-}
-
 variable "bucket_name" {
-  default = "example-bucket"
+  default = "example-bucket-test-ABCD"
 }
 
-variable "secret_name" {
-  default = "SFTP/example"
+variable "user" {
+  default = "example_test"
 }
 
+variable "password" {
+  default = "password"
+}
 
+variable "public_key" {
+  default = "ssh-rsa- ..."
+}
