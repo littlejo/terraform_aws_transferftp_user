@@ -1,5 +1,5 @@
 variable "bucket_name" {
-  default = "example-bucket-test-ABCD"
+  default = "example-bucket-test-abcd"
 }
 
 variable "user" {
