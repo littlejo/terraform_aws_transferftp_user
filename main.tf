@@ -3,7 +3,7 @@ data "aws_caller_identity" "current" {}
 locals {
   account_id = data.aws_caller_identity.current.account_id
   secrets = {
-    Password = "password"
+    Password = "${var.password}"
     Role = "arn:aws:iam::${local.account_id}:role/sftp_${var.user}_role"
     HomeDirectory = "/${var.bucket_name}"
     PublicKey = var.public_key
@@ -57,7 +57,7 @@ resource "aws_iam_policy" "policy" {
 }
 
 resource "aws_iam_role" "sftp_variable_role" {
-  name = "sftp_${var.bucket_name}_role"
+  name = "sftp_${var.user}_role"
   assume_role_policy = <<EOF
 {
       "Version": "2012-10-17",
